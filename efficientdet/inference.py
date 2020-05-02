@@ -39,28 +39,91 @@ import utils
 from visualize import vis_utils
 
 coco_id_mapping = {
-    1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane',
-    6: 'bus', 7: 'train', 8: 'truck', 9: 'boat', 10: 'traffic light',
-    11: 'fire hydrant', 13: 'stop sign', 14: 'parking meter', 15: 'bench',
-    16: 'bird', 17: 'cat', 18: 'dog', 19: 'horse', 20: 'sheep', 21: 'cow',
-    22: 'elephant', 23: 'bear', 24: 'zebra', 25: 'giraffe', 27: 'backpack',
-    28: 'umbrella', 31: 'handbag', 32: 'tie', 33: 'suitcase', 34: 'frisbee',
-    35: 'skis', 36: 'snowboard', 37: 'sports ball', 38: 'kite',
-    39: 'baseball bat', 40: 'baseball glove', 41: 'skateboard', 42: 'surfboard',
-    43: 'tennis racket', 44: 'bottle', 46: 'wine glass', 47: 'cup', 48: 'fork',
-    49: 'knife', 50: 'spoon', 51: 'bowl', 52: 'banana', 53: 'apple',
-    54: 'sandwich', 55: 'orange', 56: 'broccoli', 57: 'carrot', 58: 'hot dog',
-    59: 'pizza', 60: 'donut', 61: 'cake', 62: 'chair', 63: 'couch',
-    64: 'potted plant', 65: 'bed', 67: 'dining table', 70: 'toilet', 72: 'tv',
-    73: 'laptop', 74: 'mouse', 75: 'remote', 76: 'keyboard', 77: 'cell phone',
-    78: 'microwave', 79: 'oven', 80: 'toaster', 81: 'sink', 82: 'refrigerator',
-    84: 'book', 85: 'clock', 86: 'vase', 87: 'scissors', 88: 'teddy bear',
-    89: 'hair drier', 90: 'toothbrush',
+    1: 'person',
+    2: 'bicycle',
+    3: 'car',
+    4: 'motorcycle',
+    5: 'airplane',
+    6: 'bus',
+    7: 'train',
+    8: 'truck',
+    9: 'boat',
+    10: 'traffic light',
+    11: 'fire hydrant',
+    13: 'stop sign',
+    14: 'parking meter',
+    15: 'bench',
+    16: 'bird',
+    17: 'cat',
+    18: 'dog',
+    19: 'horse',
+    20: 'sheep',
+    21: 'cow',
+    22: 'elephant',
+    23: 'bear',
+    24: 'zebra',
+    25: 'giraffe',
+    27: 'backpack',
+    28: 'umbrella',
+    31: 'handbag',
+    32: 'tie',
+    33: 'suitcase',
+    34: 'frisbee',
+    35: 'skis',
+    36: 'snowboard',
+    37: 'sports ball',
+    38: 'kite',
+    39: 'baseball bat',
+    40: 'baseball glove',
+    41: 'skateboard',
+    42: 'surfboard',
+    43: 'tennis racket',
+    44: 'bottle',
+    46: 'wine glass',
+    47: 'cup',
+    48: 'fork',
+    49: 'knife',
+    50: 'spoon',
+    51: 'bowl',
+    52: 'banana',
+    53: 'apple',
+    54: 'sandwich',
+    55: 'orange',
+    56: 'broccoli',
+    57: 'carrot',
+    58: 'hot dog',
+    59: 'pizza',
+    60: 'donut',
+    61: 'cake',
+    62: 'chair',
+    63: 'couch',
+    64: 'potted plant',
+    65: 'bed',
+    67: 'dining table',
+    70: 'toilet',
+    72: 'tv',
+    73: 'laptop',
+    74: 'mouse',
+    75: 'remote',
+    76: 'keyboard',
+    77: 'cell phone',
+    78: 'microwave',
+    79: 'oven',
+    80: 'toaster',
+    81: 'sink',
+    82: 'refrigerator',
+    84: 'book',
+    85: 'clock',
+    86: 'vase',
+    87: 'scissors',
+    88: 'teddy bear',
+    89: 'hair drier',
+    90: 'toothbrush',
 }  # pyformat: disable
 
 
-def image_preprocess(image, image_size: Union[int, Tuple[int, int]]):
-  """Preprocess image for inference.
+def image_preprocess(image, image_size):
+    """Preprocess image for inference.
 
   Args:
     image: input image, can be a tensor or a numpy arary.
@@ -70,18 +133,16 @@ def image_preprocess(image, image_size: Union[int, Tuple[int, int]]):
   Returns:
     (image, scale): a tuple of processed image and its scale.
   """
-  input_processor = dataloader.DetectionInputProcessor(image, image_size)
-  input_processor.normalize_image()
-  input_processor.set_scale_factors_to_output_size()
-  image = input_processor.resize_and_crop_image()
-  image_scale = input_processor.image_scale_to_original
-  return image, image_scale
+    input_processor = dataloader.DetectionInputProcessor(image, image_size)
+    input_processor.normalize_image()
+    input_processor.set_scale_factors_to_output_size()
+    image = input_processor.resize_and_crop_image()
+    image_scale = input_processor.image_scale_to_original
+    return image, image_scale
 
 
-def batch_image_preprocess(raw_images,
-                           image_size: Union[int, Tuple[int, int]],
-                           batch_size: int = None):
-  """Preprocess batched images for inference.
+def batch_image_preprocess(raw_images, image_size, batch_size=None):
+    """Preprocess batched images for inference.
 
   Args:
     raw_images: a list of images, each image can be a tensor or a numpy arary.
@@ -92,27 +153,28 @@ def batch_image_preprocess(raw_images,
   Returns:
     (image, scale): a tuple of processed images and scales.
   """
-  if not batch_size:
-    # map_fn is a little bit slower due to some extra overhead.
-    map_fn = functools.partial(image_preprocess, image_size=image_size)
-    images, scales = tf.map_fn(
-        map_fn, raw_images, dtype=(tf.float32, tf.float32), back_prop=False)
+    if not batch_size:
+        # map_fn is a little bit slower due to some extra overhead.
+        map_fn = functools.partial(image_preprocess, image_size=image_size)
+        images, scales = tf.map_fn(map_fn,
+                                   raw_images,
+                                   dtype=(tf.float32, tf.float32),
+                                   back_prop=False)
+        return (images, scales)
+
+    # If batch size is known, use a simple loop.
+    scales, images = [], []
+    for i in range(batch_size):
+        image, scale = image_preprocess(raw_images[i], image_size)
+        scales.append(scale)
+        images.append(image)
+    images = tf.stack(images)
+    scales = tf.stack(scales)
     return (images, scales)
 
-  # If batch size is known, use a simple loop.
-  scales, images = [], []
-  for i in range(batch_size):
-    image, scale = image_preprocess(raw_images[i], image_size)
-    scales.append(scale)
-    images.append(image)
-  images = tf.stack(images)
-  scales = tf.stack(scales)
-  return (images, scales)
 
-
-def build_inputs(image_path_pattern: Text, image_size: Union[int, Tuple[int,
-                                                                        int]]):
-  """Read and preprocess input images.
+def build_inputs(image_path_pattern, image_size):
+    """Read and preprocess input images.
 
   Args:
     image_path_pattern: a path to indicate a single or multiple files.
@@ -125,21 +187,21 @@ def build_inputs(image_path_pattern: Text, image_size: Union[int, Tuple[int,
   Raises:
     ValueError if image_path_pattern doesn't match any file.
   """
-  raw_images, images, scales = [], [], []
-  for f in tf.io.gfile.glob(image_path_pattern):
-    image = Image.open(f)
-    raw_images.append(image)
-    image, scale = image_preprocess(image, image_size)
-    images.append(image)
-    scales.append(scale)
-  if not images:
-    raise ValueError(
-        'Cannot find any images for pattern {}'.format(image_path_pattern))
-  return raw_images, tf.stack(images), tf.stack(scales)
+    raw_images, images, scales = [], [], []
+    for f in tf.io.gfile.glob(image_path_pattern):
+        image = Image.open(f)
+        raw_images.append(image)
+        image, scale = image_preprocess(image, image_size)
+        images.append(image)
+        scales.append(scale)
+    if not images:
+        raise ValueError(
+            'Cannot find any images for pattern {}'.format(image_path_pattern))
+    return raw_images, tf.stack(images), tf.stack(scales)
 
 
-def build_model(model_name: Text, inputs: tf.Tensor, **kwargs):
-  """Build model for a given model name.
+def build_model(model_name, inputs, **kwargs):
+    """Build model for a given model name.
 
   Args:
     model_name: the name of the model.
@@ -150,13 +212,13 @@ def build_model(model_name: Text, inputs: tf.Tensor, **kwargs):
     (class_outputs, box_outputs): the outputs for class and box predictions.
     Each is a dictionary with key as feature level and value as predictions.
   """
-  model_arch = det_model_fn.get_model_arch(model_name)
-  class_outputs, box_outputs = model_arch(inputs, model_name, **kwargs)
-  return class_outputs, box_outputs
+    model_arch = det_model_fn.get_model_arch(model_name)
+    class_outputs, box_outputs = model_arch(inputs, model_name, **kwargs)
+    return class_outputs, box_outputs
 
 
 def restore_ckpt(sess, ckpt_path, ema_decay=0.9998, export_ckpt=None):
-  """Restore variables from a given checkpoint.
+    """Restore variables from a given checkpoint.
 
   Args:
     sess: a tf session for restoring or exporting models.
@@ -164,34 +226,33 @@ def restore_ckpt(sess, ckpt_path, ema_decay=0.9998, export_ckpt=None):
     ema_decay: ema decay rate. If None or zero or negative value, disable ema.
     export_ckpt: whether to export the restored model.
   """
-  sess.run(tf.global_variables_initializer())
-  if tf.io.gfile.isdir(ckpt_path):
-    ckpt_path = tf.train.latest_checkpoint(ckpt_path)
-  if ema_decay > 0:
-    ema = tf.train.ExponentialMovingAverage(decay=ema_decay)
-    ema_vars = utils.get_ema_vars()
-    var_dict = ema.variables_to_restore(ema_vars)
-    ema_assign_op = ema.apply(ema_vars)
-  else:
-    var_dict = utils.get_ema_vars()
-    ema_assign_op = None
-  tf.train.get_or_create_global_step()
-  sess.run(tf.global_variables_initializer())
-  saver = tf.train.Saver(var_dict, max_to_keep=1)
-  saver.restore(sess, ckpt_path)
+    sess.run(tf.global_variables_initializer())
+    if tf.io.gfile.isdir(ckpt_path):
+        ckpt_path = tf.train.latest_checkpoint(ckpt_path)
+    if ema_decay > 0:
+        ema = tf.train.ExponentialMovingAverage(decay=ema_decay)
+        ema_vars = utils.get_ema_vars()
+        var_dict = ema.variables_to_restore(ema_vars)
+        ema_assign_op = ema.apply(ema_vars)
+    else:
+        var_dict = utils.get_ema_vars()
+        ema_assign_op = None
+    tf.train.get_or_create_global_step()
+    sess.run(tf.global_variables_initializer())
+    saver = tf.train.Saver(var_dict, max_to_keep=1)
+    saver.restore(sess, ckpt_path)
 
-  if export_ckpt:
-    print('export model to {}'.format(export_ckpt))
-    if ema_assign_op is not None:
-      sess.run(ema_assign_op)
-    saver = tf.train.Saver(max_to_keep=1, save_relative_paths=True)
-    saver.save(sess, export_ckpt)
+    if export_ckpt:
+        print('export model to {}'.format(export_ckpt))
+        if ema_assign_op is not None:
+            sess.run(ema_assign_op)
+        saver = tf.train.Saver(max_to_keep=1, save_relative_paths=True)
+        saver.save(sess, export_ckpt)
 
 
-def det_post_process(params: Dict[Any, Any], cls_outputs: Dict[int, tf.Tensor],
-                     box_outputs: Dict[int, tf.Tensor], scales: List[float],
+def det_post_process(params, cls_outputs, box_outputs, scales,
                      min_score_thresh, max_boxes_to_draw):
-  """Post preprocessing the box/class predictions.
+    """Post preprocessing the box/class predictions.
 
   Args:
     params: a parameter dictionary that includes `min_level`, `max_level`,
@@ -210,41 +271,43 @@ def det_post_process(params: Dict[Any, Any], cls_outputs: Dict[int, tf.Tensor],
     detections_batch: a batch of detection results. Each detection is a tensor
       with each row representing [image_id, x, y, width, height, score, class].
   """
-  # TODO(tanmingxing): refactor the code to make it more explicity.
-  outputs = {
-      'cls_outputs_all': [None],
-      'box_outputs_all': [None],
-      'indices_all': [None],
-      'classes_all': [None]
-  }
-  det_model_fn.add_metric_fn_inputs(params, cls_outputs, box_outputs, outputs,
-                                    -1)
+    # TODO(tanmingxing): refactor the code to make it more explicity.
+    outputs = {
+        'cls_outputs_all': [None],
+        'box_outputs_all': [None],
+        'indices_all': [None],
+        'classes_all': [None]
+    }
+    det_model_fn.add_metric_fn_inputs(params, cls_outputs, box_outputs,
+                                      outputs, -1)
 
-  # Create anchor_label for picking top-k predictions.
-  eval_anchors = anchors.Anchors(params['min_level'], params['max_level'],
-                                 params['num_scales'], params['aspect_ratios'],
-                                 params['anchor_scale'], params['image_size'])
-  anchor_labeler = anchors.AnchorLabeler(eval_anchors, params['num_classes'])
+    # Create anchor_label for picking top-k predictions.
+    eval_anchors = anchors.Anchors(params['min_level'], params['max_level'],
+                                   params['num_scales'],
+                                   params['aspect_ratios'],
+                                   params['anchor_scale'],
+                                   params['image_size'])
+    anchor_labeler = anchors.AnchorLabeler(eval_anchors, params['num_classes'])
 
-  # Add all detections for each input image.
-  detections_batch = []
-  for index in range(params['batch_size']):
-    cls_outputs_per_sample = outputs['cls_outputs_all'][index]
-    box_outputs_per_sample = outputs['box_outputs_all'][index]
-    indices_per_sample = outputs['indices_all'][index]
-    classes_per_sample = outputs['classes_all'][index]
-    detections = anchor_labeler.generate_detections(
-        cls_outputs_per_sample,
-        box_outputs_per_sample,
-        indices_per_sample,
-        classes_per_sample,
-        image_id=[index],
-        image_scale=[scales[index]],
-        min_score_thresh=min_score_thresh,
-        max_boxes_to_draw=max_boxes_to_draw,
-        disable_pyfun=params.get('disable_pyfun'))
-    detections_batch.append(detections)
-  return tf.stack(detections_batch, name='detections')
+    # Add all detections for each input image.
+    detections_batch = []
+    for index in range(params['batch_size']):
+        cls_outputs_per_sample = outputs['cls_outputs_all'][index]
+        box_outputs_per_sample = outputs['box_outputs_all'][index]
+        indices_per_sample = outputs['indices_all'][index]
+        classes_per_sample = outputs['classes_all'][index]
+        detections = anchor_labeler.generate_detections(
+            cls_outputs_per_sample,
+            box_outputs_per_sample,
+            indices_per_sample,
+            classes_per_sample,
+            image_id=[index],
+            image_scale=[scales[index]],
+            min_score_thresh=min_score_thresh,
+            max_boxes_to_draw=max_boxes_to_draw,
+            disable_pyfun=params.get('disable_pyfun'))
+        detections_batch.append(detections)
+    return tf.stack(detections_batch, name='detections')
 
 
 def visualize_image(image,
@@ -256,7 +319,7 @@ def visualize_image(image,
                     max_boxes_to_draw=anchors.MAX_DETECTIONS_PER_IMAGE,
                     line_thickness=2,
                     **kwargs):
-  """Visualizes a given image.
+    """Visualizes a given image.
 
   Args:
     image: a image with shape [H, W, C].
@@ -273,24 +336,23 @@ def visualize_image(image,
   Returns:
     output_image: an output image with annotated boxes and classes.
   """
-  category_index = {k: {'id': k, 'name': id_mapping[k]} for k in id_mapping}
-  img = np.array(image)
-  vis_utils.visualize_boxes_and_labels_on_image_array(
-      img,
-      boxes,
-      classes,
-      scores,
-      category_index,
-      min_score_thresh=min_score_thresh,
-      max_boxes_to_draw=max_boxes_to_draw,
-      line_thickness=line_thickness,
-      **kwargs)
-  return img
+    category_index = {k: {'id': k, 'name': id_mapping[k]} for k in id_mapping}
+    img = np.array(image)
+    vis_utils.visualize_boxes_and_labels_on_image_array(
+        img,
+        boxes,
+        classes,
+        scores,
+        category_index,
+        min_score_thresh=min_score_thresh,
+        max_boxes_to_draw=max_boxes_to_draw,
+        line_thickness=line_thickness,
+        **kwargs)
+    return img
 
 
-def parse_label_id_mapping(
-    label_id_mapping: Union[Text, Dict[int, Text]] = None) -> Dict[int, Text]:
-  """Parse label id mapping from a string or a yaml file.
+def parse_label_id_mapping(label_id_mapping=None):
+    """Parse label id mapping from a string or a yaml file.
 
   The label_id_mapping is a dict that maps class id to its name, such as:
 
@@ -305,19 +367,19 @@ def parse_label_id_mapping(
   Returns:
     A dictionary with key as integer id and value as a string of name.
   """
-  if label_id_mapping is None:
-    return coco_id_mapping
+    if label_id_mapping is None:
+        return coco_id_mapping
 
-  if isinstance(label_id_mapping, dict):
-    label_id_dict = label_id_mapping
-  elif isinstance(label_id_mapping, str):
-    with tf.io.gfile.GFile(label_id_mapping) as f:
-      label_id_dict = yaml.load(f, Loader=yaml.FullLoader)
-  else:
-    raise TypeError('label_id_mapping must be a dict or a yaml filename, '
-                    'containing a mapping from class ids to class names.')
+    if isinstance(label_id_mapping, dict):
+        label_id_dict = label_id_mapping
+    elif isinstance(label_id_mapping, str):
+        with tf.io.gfile.GFile(label_id_mapping) as f:
+            label_id_dict = yaml.load(f, Loader=yaml.FullLoader)
+    else:
+        raise TypeError('label_id_mapping must be a dict or a yaml filename, '
+                        'containing a mapping from class ids to class names.')
 
-  return label_id_dict
+    return label_id_dict
 
 
 def visualize_image_prediction(image,
@@ -325,7 +387,7 @@ def visualize_image_prediction(image,
                                disable_pyfun=True,
                                label_id_mapping=None,
                                **kwargs):
-  """Viusalize detections on a given image.
+    """Viusalize detections on a given image.
 
   Args:
     image: Image content in shape of [height, width, 3].
@@ -339,22 +401,22 @@ def visualize_image_prediction(image,
   Returns:
     a list of annotated images.
   """
-  boxes = prediction[:, 1:5]
-  classes = prediction[:, 6].astype(int)
-  scores = prediction[:, 5]
+    boxes = prediction[:, 1:5]
+    classes = prediction[:, 6].astype(int)
+    scores = prediction[:, 5]
 
-  if not disable_pyfun:
-    # convert [x, y, width, height] to [y, x, height, width]
-    boxes[:, [0, 1, 2, 3]] = boxes[:, [1, 0, 3, 2]]
+    if not disable_pyfun:
+        # convert [x, y, width, height] to [y, x, height, width]
+        boxes[:, [0, 1, 2, 3]] = boxes[:, [1, 0, 3, 2]]
 
-  label_id_mapping = label_id_mapping or coco_id_mapping
-  boxes[:, 2:4] += boxes[:, 0:2]
-  return visualize_image(image, boxes, classes, scores, label_id_mapping,
-                         **kwargs)
+    label_id_mapping = label_id_mapping or coco_id_mapping
+    boxes[:, 2:4] += boxes[:, 0:2]
+    return visualize_image(image, boxes, classes, scores, label_id_mapping,
+                           **kwargs)
 
 
 class ServingDriver(object):
-  """A driver for serving single or batch images.
+    """A driver for serving single or batch images.
 
   This driver supports serving with image files or arrays, with configurable
   batch size.
@@ -401,17 +463,18 @@ class ServingDriver(object):
       driver.visualize(raw_images[0], detections[0])
       PIL.Image.fromarray(raw_images[0]).save(output_image_path)
   """
-
-  def __init__(self,
-               model_name: Text,
-               ckpt_path: Text,
-               batch_size: int = 1,
-               use_xla: bool = False,
-               min_score_thresh: float = None,
-               max_boxes_to_draw: float = None,
-               line_thickness: int = None,
-               model_params: Dict[Text, Any] = None):
-    """Initialize the inference driver.
+    def __init__(self,
+                 tf_graph,
+                 model_name,
+                 ckpt_path,
+                 batch_size=1,
+                 use_xla=False,
+                 min_score_thresh=None,
+                 max_boxes_to_draw=None,
+                 line_thickness=None,
+                 model_params=None,
+                 gpu_memory_fraction=None):
+        """Initialize the inference driver.
 
     Args:
       model_name: target model name, such as efficientdet-d0.
@@ -423,93 +486,106 @@ class ServingDriver(object):
       line_thickness: the line thickness for drawing boxes.
       model_params: model parameters for overriding the config.
     """
-    self.model_name = model_name
-    self.ckpt_path = ckpt_path
-    self.batch_size = batch_size
+        self.model_name = model_name
+        self.ckpt_path = ckpt_path
+        self.batch_size = batch_size
 
-    self.params = hparams_config.get_detection_config(model_name).as_dict()
+        self.params = hparams_config.get_detection_config(model_name).as_dict()
 
-    if model_params:
-      self.params.update(model_params)
-    self.params.update(dict(is_training_bn=False, use_bfloat16=False))
-    self.label_id_mapping = parse_label_id_mapping(
-        self.params.get('label_id_mapping', None))
+        if model_params:
+            self.params.update(model_params)
+        self.params.update(dict(is_training_bn=False, use_bfloat16=False))
+        self.label_id_mapping = parse_label_id_mapping(
+            self.params.get('label_id_mapping', None))
 
-    self.signitures = None
-    self.sess = None
-    self.disable_pyfun = True
-    self.use_xla = use_xla
+        self.signitures = None
+        self.disable_pyfun = True
+        self.use_xla = use_xla
 
-    self.min_score_thresh = min_score_thresh or anchors.MIN_SCORE_THRESH
-    self.max_boxes_to_draw = (
-        max_boxes_to_draw or anchors.MAX_DETECTIONS_PER_IMAGE)
-    self.line_thickness = line_thickness
+        self.min_score_thresh = min_score_thresh or anchors.MIN_SCORE_THRESH
+        self.max_boxes_to_draw = (max_boxes_to_draw
+                                  or anchors.MAX_DETECTIONS_PER_IMAGE)
+        self.line_thickness = line_thickness
+        if gpu_memory_fraction:
+            sess_config = tf.ConfigProto(gpu_options=tf.GPUOptions(
+                allow_growth=True,
+                per_process_gpu_memory_fraction=gpu_memory_fraction))
+        else:
+            sess_config = tf.ConfigProto(gpu_options=tf.GPUOptions(
+                allow_growth=True))
+        if self.use_xla:
+            sess_config.graph_options.optimizer_options.global_jit_level = (
+                tf.OptimizerOptions.ON_2)
+        self.sess = tf.Session(graph=tf_graph, config=sess_config)
 
-  def __del__(self):
-    if self.sess:
-      self.sess.close()
+    def __del__(self):
+        if self.sess:
+            self.sess.close()
 
-  def _build_session(self):
-    sess_config = tf.ConfigProto()
-    if self.use_xla:
-      sess_config.graph_options.optimizer_options.global_jit_level = (
-          tf.OptimizerOptions.ON_2)
-    return tf.Session(config=sess_config)
+    def _build_session(self):
+        sess_config = tf.ConfigProto(gpu_options=tf.GPUOptions(
+            allow_growth=True))
+        if self.use_xla:
+            sess_config.graph_options.optimizer_options.global_jit_level = (
+                tf.OptimizerOptions.ON_2)
+        return tf.Session(config=sess_config)
 
-  def build(self, params_override=None):
-    """Build model and restore checkpoints."""
-    params = copy.deepcopy(self.params)
-    if params_override:
-      params.update(params_override)
+    def build(self, params_override=None):
+        """Build model and restore checkpoints."""
+        params = copy.deepcopy(self.params)
+        if params_override:
+            params.update(params_override)
 
-    if not self.sess:
-      self.sess = self._build_session()
-    with self.sess.graph.as_default():
-      image_files = tf.placeholder(tf.string, name='image_files', shape=[None])
-      image_size = params['image_size']
-      raw_images = []
-      for i in range(self.batch_size):
-        image = tf.io.decode_image(image_files[i])
-        image.set_shape([None, None, None])
-        raw_images.append(image)
-      raw_images = tf.stack(raw_images, name='image_arrays')
+        if not self.sess:
+            self.sess = self._build_session()
+        with self.sess.graph.as_default():
+            image_files = tf.placeholder(tf.string,
+                                         name='image_files',
+                                         shape=[None])
+            image_size = params['image_size']
+            raw_images = []
+            for i in range(self.batch_size):
+                image = tf.io.decode_image(image_files[i])
+                image.set_shape([None, None, None])
+                raw_images.append(image)
+            raw_images = tf.stack(raw_images, name='image_arrays')
 
-      images, scales = batch_image_preprocess(raw_images, image_size,
-                                              self.batch_size)
-      if params['data_format'] == 'channels_first':
-        images = tf.transpose(images, [0, 3, 1, 2])
-      class_outputs, box_outputs = build_model(self.model_name, images,
-                                               **params)
-      params.update(
-          dict(batch_size=self.batch_size, disable_pyfun=self.disable_pyfun))
-      detections = det_post_process(params, class_outputs, box_outputs, scales,
-                                    self.min_score_thresh,
-                                    self.max_boxes_to_draw)
+            images, scales = batch_image_preprocess(raw_images, image_size,
+                                                    self.batch_size)
+            if params['data_format'] == 'channels_first':
+                images = tf.transpose(images, [0, 3, 1, 2])
+            class_outputs, box_outputs = build_model(self.model_name, images,
+                                                     **params)
+            params.update(
+                dict(batch_size=self.batch_size,
+                     disable_pyfun=self.disable_pyfun))
+            detections = det_post_process(params, class_outputs, box_outputs,
+                                          scales, self.min_score_thresh,
+                                          self.max_boxes_to_draw)
 
-      restore_ckpt(
-          self.sess,
-          self.ckpt_path,
-          ema_decay=self.params['moving_average_decay'],
-          export_ckpt=None)
+            restore_ckpt(self.sess,
+                         self.ckpt_path,
+                         ema_decay=self.params['moving_average_decay'],
+                         export_ckpt=None)
 
-    self.signitures = {
-        'image_files': image_files,
-        'image_arrays': raw_images,
-        'prediction': detections,
-    }
-    return self.signitures
+        self.signitures = {
+            'image_files': image_files,
+            'image_arrays': raw_images,
+            'prediction': detections,
+        }
+        return self.signitures
 
-  def visualize(self, image, prediction, **kwargs):
-    """Visualize prediction on image."""
-    return visualize_image_prediction(
-        image,
-        prediction,
-        disable_pyfun=self.disable_pyfun,
-        label_id_mapping=self.label_id_mapping,
-        **kwargs)
+    def visualize(self, image, prediction, **kwargs):
+        """Visualize prediction on image."""
+        return visualize_image_prediction(
+            image,
+            prediction,
+            disable_pyfun=self.disable_pyfun,
+            label_id_mapping=self.label_id_mapping,
+            **kwargs)
 
-  def serve_files(self, image_files: List[Text]):
-    """Serve a list of input image files.
+    def serve_files(self, image_files):
+        """Serve a list of input image files.
 
     Args:
       image_files: a list of image files with shape [1] and type string.
@@ -517,55 +593,56 @@ class ServingDriver(object):
     Returns:
       A list of detections.
     """
-    if not self.sess:
-      self.build()
-    predictions = self.sess.run(
-        self.signitures['prediction'],
-        feed_dict={self.signitures['image_files']: image_files})
-    return predictions
+        if not self.sess:
+            self.build()
+        predictions = self.sess.run(
+            self.signitures['prediction'],
+            feed_dict={self.signitures['image_files']: image_files})
+        return predictions
 
-  def benchmark(self, image_arrays, trace_filename=None):
-    """Benchmark inference latency/throughput.
+    def benchmark(self, image_arrays, trace_filename=None):
+        """Benchmark inference latency/throughput.
 
     Args:
       image_arrays: a list of images in numpy array format.
       trace_filename: If None, specify the filename for saving trace.
     """
-    if not self.sess:
-      self.build()
+        if not self.sess:
+            self.build()
 
-    # init session
-    self.sess.run(
-        self.signitures['prediction'],
-        feed_dict={self.signitures['image_arrays']: image_arrays})
+        # init session
+        self.sess.run(
+            self.signitures['prediction'],
+            feed_dict={self.signitures['image_arrays']: image_arrays})
 
-    start = time.perf_counter()
-    for _ in range(10):
-      self.sess.run(
-          self.signitures['prediction'],
-          feed_dict={self.signitures['image_arrays']: image_arrays})
-    end = time.perf_counter()
-    inference_time = (end - start) / 10
+        start = time.perf_counter()
+        for _ in range(10):
+            self.sess.run(
+                self.signitures['prediction'],
+                feed_dict={self.signitures['image_arrays']: image_arrays})
+        end = time.perf_counter()
+        inference_time = (end - start) / 10
 
-    print('Per batch inference time: ', inference_time)
-    print('FPS: ', self.batch_size / inference_time)
+        print('Per batch inference time: ', inference_time)
+        print('FPS: ', self.batch_size / inference_time)
 
-    if trace_filename:
-      run_options = tf.RunOptions()
-      run_options.trace_level = tf.RunOptions.FULL_TRACE
-      run_metadata = tf.RunMetadata()
-      self.sess.run(
-          self.signitures['prediction'],
-          feed_dict={self.signitures['image_arrays']: image_arrays},
-          options=run_options,
-          run_metadata=run_metadata)
-      with tf.io.gfile.GFile(trace_filename, 'w') as trace_file:
-        from tensorflow.python.client import timeline  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
-        trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-        trace_file.write(trace.generate_chrome_trace_format(show_memory=True))
+        if trace_filename:
+            run_options = tf.RunOptions()
+            run_options.trace_level = tf.RunOptions.FULL_TRACE
+            run_metadata = tf.RunMetadata()
+            self.sess.run(
+                self.signitures['prediction'],
+                feed_dict={self.signitures['image_arrays']: image_arrays},
+                options=run_options,
+                run_metadata=run_metadata)
+            with tf.io.gfile.GFile(trace_filename, 'w') as trace_file:
+                from tensorflow.python.client import timeline  # pylint: disable=g-direct-tensorflow-import,g-import-not-at-top
+                trace = timeline.Timeline(step_stats=run_metadata.step_stats)
+                trace_file.write(
+                    trace.generate_chrome_trace_format(show_memory=True))
 
-  def serve_images(self, image_arrays):
-    """Serve a list of image arrays.
+    def serve_images(self, image_arrays):
+        """Serve a list of image arrays.
 
     Args:
       image_arrays: A list of image content with each image has shape [height,
@@ -574,73 +651,71 @@ class ServingDriver(object):
     Returns:
       A list of detections.
     """
-    if not self.sess:
-      self.build()
-    predictions = self.sess.run(
-        self.signitures['prediction'],
-        feed_dict={self.signitures['image_arrays']: image_arrays})
-    return predictions
+        if not self.sess:
+            self.build()
+        predictions = self.sess.run(
+            self.signitures['prediction'],
+            feed_dict={self.signitures['image_arrays']: image_arrays})
+        return predictions
 
-  def load(self, saved_model_dir_or_frozen_graph: Text):
-    """Load the model using saved model or a frozen graph."""
-    if not self.sess:
-      self.sess = self._build_session()
-    self.signitures = {
-        'image_files': 'image_files:0',
-        'image_arrays': 'image_arrays:0',
-        'prediction': 'detections:0',
-    }
+    def load(self, saved_model_dir_or_frozen_graph):
+        """Load the model using saved model or a frozen graph."""
+        if not self.sess:
+            self.sess = self._build_session()
+        self.signitures = {
+            'image_files': 'image_files:0',
+            'image_arrays': 'image_arrays:0',
+            'prediction': 'detections:0',
+        }
 
-    # Load saved model if it is a folder.
-    if tf.io.gfile.isdir(saved_model_dir_or_frozen_graph):
-      return tf.saved_model.load(self.sess, ['serve'],
-                                 saved_model_dir_or_frozen_graph)
+        # Load saved model if it is a folder.
+        if tf.io.gfile.isdir(saved_model_dir_or_frozen_graph):
+            return tf.saved_model.load(self.sess, ['serve'],
+                                       saved_model_dir_or_frozen_graph)
 
-    # Load a frozen graph.
-    graph_def = tf.GraphDef()
-    with tf.gfile.GFile(saved_model_dir_or_frozen_graph, 'rb') as f:
-      graph_def.ParseFromString(f.read())
-    return tf.import_graph_def(graph_def, name='')
+        # Load a frozen graph.
+        graph_def = tf.GraphDef()
+        with tf.gfile.GFile(saved_model_dir_or_frozen_graph, 'rb') as f:
+            graph_def.ParseFromString(f.read())
+        return tf.import_graph_def(graph_def, name='')
 
-  def freeze(self):
-    """Freeze the graph."""
-    output_names = [self.signitures['prediction'].op.name]
-    graphdef = tf.graph_util.convert_variables_to_constants(
-        self.sess, self.sess.graph_def, output_names)
-    return graphdef
+    def freeze(self):
+        """Freeze the graph."""
+        output_names = [self.signitures['prediction'].op.name]
+        graphdef = tf.graph_util.convert_variables_to_constants(
+            self.sess, self.sess.graph_def, output_names)
+        return graphdef
 
-  def export(self, output_dir):
-    """Export a saved model."""
-    signitures = self.signitures
-    signature_def_map = {
-        'serving_default':
-            tf.saved_model.predict_signature_def(
+    def export(self, output_dir):
+        """Export a saved model."""
+        signitures = self.signitures
+        signature_def_map = {
+            'serving_default': tf.saved_model.predict_signature_def(
                 {signitures['image_arrays'].name: signitures['image_arrays']},
                 {signitures['prediction'].name: signitures['prediction']}),
-        'serving_base64':
-            tf.saved_model.predict_signature_def(
+            'serving_base64': tf.saved_model.predict_signature_def(
                 {signitures['image_files'].name: signitures['image_files']},
                 {signitures['prediction'].name: signitures['prediction']}),
-    }
-    b = tf.saved_model.Builder(output_dir)
-    b.add_meta_graph_and_variables(
-        self.sess,
-        tags=['serve'],
-        signature_def_map=signature_def_map,
-        assets_collection=tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS),
-        clear_devices=True)
-    b.save()
-    logging.info('Model saved at %s', output_dir)
+        }
+        b = tf.saved_model.Builder(output_dir)
+        b.add_meta_graph_and_variables(self.sess,
+                                       tags=['serve'],
+                                       signature_def_map=signature_def_map,
+                                       assets_collection=tf.get_collection(
+                                           tf.GraphKeys.ASSET_FILEPATHS),
+                                       clear_devices=True)
+        b.save()
+        logging.info('Model saved at %s', output_dir)
 
-    # also save freeze pb file.
-    graphdef = self.freeze()
-    pb_path = os.path.join(output_dir, self.model_name + '_frozen.pb')
-    tf.io.gfile.GFile(pb_path, 'wb').write(graphdef.SerializeToString())
-    logging.info('Free graph saved at %s', pb_path)
+        # also save freeze pb file.
+        graphdef = self.freeze()
+        pb_path = os.path.join(output_dir, self.model_name + '_frozen.pb')
+        tf.io.gfile.GFile(pb_path, 'wb').write(graphdef.SerializeToString())
+        logging.info('Free graph saved at %s', pb_path)
 
 
 class InferenceDriver(object):
-  """A driver for doing batch inference.
+    """A driver for doing batch inference.
 
   Example usage:
 
@@ -648,31 +723,27 @@ class InferenceDriver(object):
    driver.inference('/tmp/*.jpg', '/tmp/outputdir')
 
   """
-
-  def __init__(self,
-               model_name: Text,
-               ckpt_path: Text,
-               model_params: Dict[Text, Any] = None):
-    """Initialize the inference driver.
+    def __init__(self, model_name, ckpt_path, model_params=None):
+        """Initialize the inference driver.
 
     Args:
       model_name: target model name, such as efficientdet-d0.
       ckpt_path: checkpoint path, such as /tmp/efficientdet-d0/.
       model_params: model parameters for overriding the config.
     """
-    self.model_name = model_name
-    self.ckpt_path = ckpt_path
-    self.params = hparams_config.get_detection_config(model_name).as_dict()
-    if model_params:
-      self.params.update(model_params)
-    self.params.update(dict(is_training_bn=False, use_bfloat16=False))
-    self.label_id_mapping = parse_label_id_mapping(
-        self.params.get('label_id_mapping', None))
+        self.model_name = model_name
+        self.ckpt_path = ckpt_path
+        self.params = hparams_config.get_detection_config(model_name).as_dict()
+        if model_params:
+            self.params.update(model_params)
+        self.params.update(dict(is_training_bn=False, use_bfloat16=False))
+        self.label_id_mapping = parse_label_id_mapping(
+            self.params.get('label_id_mapping', None))
 
-    self.disable_pyfun = True
+        self.disable_pyfun = True
 
-  def inference(self, image_path_pattern: Text, output_dir: Text, **kwargs):
-    """Read and preprocess input images.
+    def inference(self, image_path_pattern, output_dir, **kwargs):
+        """Read and preprocess input images.
 
     Args:
       image_path_pattern: Image file pattern such as /tmp/img*.jpg
@@ -684,47 +755,47 @@ class InferenceDriver(object):
     Returns:
       Annotated image.
     """
-    params = copy.deepcopy(self.params)
-    with tf.Session() as sess:
-      # Buid inputs and preprocessing.
-      raw_images, images, scales = build_inputs(image_path_pattern,
-                                                params['image_size'])
-      if params['data_format'] == 'channels_first':
-        images = tf.transpose(images, [0, 3, 1, 2])
-      # Build model.
-      class_outputs, box_outputs = build_model(self.model_name, images,
-                                               **self.params)
-      restore_ckpt(
-          sess,
-          self.ckpt_path,
-          ema_decay=self.params['moving_average_decay'],
-          export_ckpt=None)
+        params = copy.deepcopy(self.params)
+        with tf.Session() as sess:
+            # Buid inputs and preprocessing.
+            raw_images, images, scales = build_inputs(image_path_pattern,
+                                                      params['image_size'])
+            if params['data_format'] == 'channels_first':
+                images = tf.transpose(images, [0, 3, 1, 2])
+            # Build model.
+            class_outputs, box_outputs = build_model(self.model_name, images,
+                                                     **self.params)
+            restore_ckpt(sess,
+                         self.ckpt_path,
+                         ema_decay=self.params['moving_average_decay'],
+                         export_ckpt=None)
 
-      # for postprocessing.
-      params.update(
-          dict(batch_size=len(raw_images), disable_pyfun=self.disable_pyfun))
+            # for postprocessing.
+            params.update(
+                dict(batch_size=len(raw_images),
+                     disable_pyfun=self.disable_pyfun))
 
-      # Build postprocessing.
-      detections_batch = det_post_process(
-          params,
-          class_outputs,
-          box_outputs,
-          scales,
-          min_score_thresh=kwargs.get('min_score_thresh',
-                                      anchors.MIN_SCORE_THRESH),
-          max_boxes_to_draw=kwargs.get('max_boxes_to_draw',
-                                       anchors.MAX_DETECTIONS_PER_IMAGE))
-      predictions = sess.run(detections_batch)
-      # Visualize results.
-      for i, prediction in enumerate(predictions):
-        img = visualize_image_prediction(
-            raw_images[i],
-            prediction,
-            disable_pyfun=self.disable_pyfun,
-            label_id_mapping=self.label_id_mapping,
-            **kwargs)
-        output_image_path = os.path.join(output_dir, str(i) + '.jpg')
-        Image.fromarray(img).save(output_image_path)
-        logging.info('writing file to %s', output_image_path)
+            # Build postprocessing.
+            detections_batch = det_post_process(
+                params,
+                class_outputs,
+                box_outputs,
+                scales,
+                min_score_thresh=kwargs.get('min_score_thresh',
+                                            anchors.MIN_SCORE_THRESH),
+                max_boxes_to_draw=kwargs.get('max_boxes_to_draw',
+                                             anchors.MAX_DETECTIONS_PER_IMAGE))
+            predictions = sess.run(detections_batch)
+            # Visualize results.
+            for i, prediction in enumerate(predictions):
+                img = visualize_image_prediction(
+                    raw_images[i],
+                    prediction,
+                    disable_pyfun=self.disable_pyfun,
+                    label_id_mapping=self.label_id_mapping,
+                    **kwargs)
+                output_image_path = os.path.join(output_dir, str(i) + '.jpg')
+                Image.fromarray(img).save(output_image_path)
+                logging.info('writing file to %s', output_image_path)
 
-      return predictions
+            return predictions
