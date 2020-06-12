@@ -22,6 +22,7 @@ from __future__ import print_function
 import copy
 import functools
 import os
+import sys
 import time
 
 from absl import logging
@@ -31,6 +32,7 @@ import tensorflow.compat.v1 as tf
 from typing import Text, Dict, Any, List, Tuple, Union
 import yaml
 
+sys.path.append(os.path.dirname(__file__))
 import anchors
 import dataloader
 import det_model_fn
